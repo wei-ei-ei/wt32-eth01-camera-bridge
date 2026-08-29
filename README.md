@@ -158,7 +158,7 @@ idf.py -p COM15 flash
 。如果工具链不在默认位置时，参考以下手动配置（把 ESP-IDF 工具链装在了 E 盘），把路径换成你的实际路径：
 
 ```powershell
-cd /d E:\esp-idf\esp-idf-v6.0.2
+cd E:\esp-idf\esp-idf-v6.0.2
 set IDF_TOOLS_PATH=E:\.espressif
 set TEMP=E:\esp_temp
 set TMP=E:\esp_temp
