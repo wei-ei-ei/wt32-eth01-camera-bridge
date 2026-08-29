@@ -26,8 +26,8 @@ static const char *TAG = "example_sta2wired";
 /* 【修改】硬编码 WiFi 凭据：
  * NVS 中无已保存凭据时，自动使用下面的 SSID/密码连接，
  * 跳过网页配网。若连接失败仍会回退到网页配网模式。 */
-#define EXAMPLE_DEFAULT_WIFI_SSID      "vivo_x200_pro_mini"
-#define EXAMPLE_DEFAULT_WIFI_PASS      "rxw12345"
+#define EXAMPLE_DEFAULT_WIFI_SSID      "name"
+#define EXAMPLE_DEFAULT_WIFI_PASS      "passpord"
 
 
 static EventGroupHandle_t s_event_flags;
