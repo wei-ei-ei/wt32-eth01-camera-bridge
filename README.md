@@ -162,7 +162,7 @@ cd E:\esp-idf\esp-idf-v6.0.2
 set IDF_TOOLS_PATH=E:\.espressif
 set TEMP=E:\esp_temp
 set TMP=E:\esp_temp
-call export.bat
+.\export.ps1
 cd project\wt32-eth01-bridge
 idf.py build
 ```
