@@ -1,38 +1,25 @@
-# 手动配置模式（Manual configuration via http server）
+# ==== 配网模式（HTTP 网页配网，作为 fallback）====
 CONFIG_EXAMPLE_WIFI_CONFIGURATION_MANUAL=y
 CONFIG_EXAMPLE_WIFI_CONFIGURATION_PROVISIONING=n
 
-# ==== 【修改】WiFi 凭据 ====
-# 注意：本工程不支持通过 sdkconfig 配置 SSID/密码。
-# 原 CONFIG_EXAMPLE_WIFI_SSID / CONFIG_EXAMPLE_WIFI_PASSWORD 选项在 Kconfig 中不存在，已移除。
-# WiFi 凭据已硬编码在 main/sta2eth_main.c 的 connect_wifi() 中：iPhone18 / rxw12345
+# ==== 以太网接口 ====
+CONFIG_EXAMPLE_WIRED_INTERFACE_IS_ETHERNET=y
 
-# ==== 【修改】以太网 PHY 配置（WT32-ETH01 硬件为 LAN8720）====
-# PHY 型号必须选 LAN87XX（原 CONFIG_ETH_PHY_LAN8720 选项名无效，已被忽略）
+# ==== PHY 配置（WT32-ETH01 = LAN8720）====
 CONFIG_ETHERNET_PHY_LAN87XX=y
-CONFIG_ETHERNET_PHY_IP101=n
-# PHY 地址：LAN8720 固定地址 1（-1 为自动探测，也可工作）
 CONFIG_ETHERNET_PHY_ADDR=1
-# 禁用 PHY 硬件复位：WT32-ETH01 无独立 PHY 复位引脚，复位依赖整板上电
 CONFIG_ETHERNET_PHY_RST_GPIO=16
 
-CONFIG_EXAMPLE_MODIFY_DHCP_MESSAGES=n
-
-# ==== 【修改】RMII 接口与时钟（WT32-ETH01 为 LAN8720 + 外部 50MHz 晶振）====
-# 原理由：默认 INTERFACE_DEFAULT 走的是 ESP32-Ethernet-Kit(IP101)引脚，与 LAN8720 不匹配导致 reset timeout。
-# 切换到 RMII，按 WT32-ETH01 引脚定义显式配置：
+# ==== RMII 接口与时钟（LAN8720 25MHz 晶振倍频 50MHz 输出给 GPIO0）====
 CONFIG_ETHERNET_PHY_INTERFACE_RMII=y
-# 50MHz 时钟由 LAN8720 外部晶振（）提供，从 GPIO0 输入到 ESP32 EMAC
-# 【修改】改为内部时钟输出：ESP32 APLL 生成 50MHz 从 GPIO0 输出给 LAN8720
 CONFIG_ETHERNET_RMII_CLK_INPUT=y
 CONFIG_ETHERNET_RMII_CLK_GPIO=0
-# RMII 数据/控制引脚（WT32-ETH01 标准接法）
-CONFIG_ETHERNET_RMII_TX_EN_GPIO=21
-CONFIG_ETHERNET_RMII_TXD0_GPIO=19
-CONFIG_ETHERNET_RMII_TXD1_GPIO=22
-CONFIG_ETHERNET_RMII_CRS_DV_GPIO=27
-CONFIG_ETHERNET_RMII_RXD0_GPIO=25
-CONFIG_ETHERNET_RMII_RXD1_GPIO=26
 
-# 【修复】WPA2 4-way 握手必需 HMAC-SHA1，启用 SHA1
+# ==== DHCP 消息修改（必须为 y，否则 ethernet_iface.c 编译报"未声明"）====
+CONFIG_EXAMPLE_MODIFY_DHCP_MESSAGES=y
+
+# ==== 分区表：单 app 大分区（app 1.5MB）====
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
+
+# ==== SHA1（WPA2 握手必需）====
 CONFIG_MBEDTLS_SHA1_C=y
