@@ -38,7 +38,7 @@ CONFIG_ETHERNET_PHY_INTERFACE_RMII=y
 
 ---
 
-## 源码改动（仅 `main/sta2eth_main.c`）
+## 改动步骤（仅 `main/sta2eth_main.c`）
 
 ### 改动 1：顶部加硬编码 WiFi 凭据
 
@@ -49,7 +49,7 @@ CONFIG_ETHERNET_PHY_INTERFACE_RMII=y
 
 ### 改动 2：`app_main()` 里，NVS 空或 SSID 不一致时自动写入硬编码凭据
 
-**为什么改**：官方原版只在 NVS 里没有凭据时才进网页配网；一旦配过一次，改宏就再也不生效。改成"启动时对比 NVS 里的 SSID 和宏，不一致就用宏覆盖"，这样改宏重新烧录就能直接连新热点。
+**为什么改**：官方原版只在 NVS 里没有凭据时才进网页配网；一旦配过一次，改宏就再也不生效。改成"启动时对比 NVS 里的 SSID 和宏，不一致就用宏覆盖"，这样改宏重新烧录就能直接连新 WiFi。
 
 ```c
 if (do_provision) {
@@ -80,15 +80,15 @@ if (do_provision) {
 ```
 
 **行为**：
-- 开机自动连硬编码热点，无需网页配网
-- 改宏重新烧录 → 自动覆盖旧凭据 → 连新热点
-- 热点没开/密码错 → 自动回退网页配网（不会变砖）
+- 开机自动连硬编码 WiFi，无需网页配网
+- 改宏重新烧录 → 自动覆盖旧凭据 → 连新 WiFi
+- WiFi 没开/密码错 → 自动回退网页配网（不会变砖）
 
 ---
 
-## 操作流程
+## 实行步骤（操作流程）
 
-### 编译
+### 步骤 1：环境准备
 
 ```powershell
 cd /d E:\esp-idf\esp-idf-v6.0.2
@@ -96,33 +96,48 @@ set IDF_TOOLS_PATH=E:\.espressif
 set TEMP=E:\esp_temp
 set TMP=E:\esp_temp
 call export.bat
+```
+
+看到 `Setting IDF_PATH to 'E:\esp-idf\esp-idf-v6.0.2'` 即成功。
+
+### 步骤 2：进入工程 + 编译
+
+```powershell
 cd project\wt32-eth01-bridge
 idf.py build
 ```
 
-### 烧录
+成功标志：`sta_to_eth.bin binary size ... Project build complete.`
 
-1. 杜邦线把 **IO0 接 GND**，模块**断电再上电**
-2. `idf.py -p COM15 flash`
+### 步骤 3：烧录
 
-### 运行
+1. 杜邦线把 **IO0 接 GND**（进入下载模式），模块**断电再上电**
+2. 执行：
 
-1. **拔掉 IO0 接地线**，模块**断电再上电**
+```powershell
+idf.py -p COM15 flash
+```
+
+成功标志：`Writing 'sta_to_eth.bin' ... 100.0%` + `Done`
+
+### 步骤 4：运行
+
+1. **拔掉 IO0 接地线**（IO0 恢复高电平），模块**断电再上电**
 2. 模块自动连 WiFi 进入桥接
 
-### 验证
+### 步骤 5：验证
 
 - 电脑网线插模块，网卡设「自动获取 IP」
-- 电脑拿到热点网段 IP，`ping 223.5.5.5` 通 = 成功
+- 电脑拿到 WiFi 网段 IP，`ping 223.5.5.5` 通 = 成功
 
 ---
 
-## 换热点
+## 换 WiFi
 
 改 `sta2eth_main.c` 顶部两个宏，重新编译烧录即可，无需清 NVS：
 
 ```c
-#define EXAMPLE_DEFAULT_WIFI_SSID      "新热点名"
+#define EXAMPLE_DEFAULT_WIFI_SSID      "新WiFi名"
 #define EXAMPLE_DEFAULT_WIFI_PASS      "新密码"
 ```
 
@@ -136,7 +151,7 @@ idf.py build
 | 以太网 reset timeout | GPIO16 没拉高 | `CONFIG_ETHERNET_PHY_RST_GPIO=16` |
 | Link Up 但 ping 不通 | 时钟方向错 | `CONFIG_ETHERNET_RMII_CLK_INPUT=y` |
 | 改宏不生效 | NVS 存旧凭据 | 新逻辑已自动覆盖 |
-| 电脑没网 | 模块没连上热点 | 先确认模块连上热点再插网线 |
+| 电脑没网 | 模块没连上 WiFi | 先确认模块连上 WiFi 再插网线 |
 
 ---
 
