@@ -88,22 +88,20 @@ if (do_provision) {
 
 ## 实行步骤（操作流程）
 
-### 步骤 1：环境准备
+### 步骤 1：打开 ESP-IDF 编译环境
 
-```powershell
-cd /d E:\esp-idf\esp-idf-v6.0.2
-set IDF_TOOLS_PATH=E:\.espressif
-set TEMP=E:\esp_temp
-set TMP=E:\esp_temp
-call export.bat
-```
+**通用做法（适合大多数人）**：
 
-看到 `Setting IDF_PATH to 'E:\esp-idf\esp-idf-v6.0.2'` 即成功。
+- 从 Windows 开始菜单打开 **「ESP-IDF 6.0 PowerShell」**（版本号可能不同，认准带 ESP-IDF 字样的 PowerShell 快捷方式），它会自动配置好所有环境变量。
+
+- 或者用 **VS Code**：安装 "ESP-IDF" 插件，用它打开本工程文件夹，直接编译烧录。
+
+> 只有当工具链装在**非默认位置**（不在 `C:\Users\你的用户名\.espressif`）时，才需要手动配置环境变量，见文末「附录：特殊环境配置」。
 
 ### 步骤 2：进入工程 + 编译
 
 ```powershell
-cd project\wt32-eth01-bridge
+cd <你的ESP-IDF目录>\project\wt32-eth01-bridge
 idf.py build
 ```
 
@@ -112,7 +110,7 @@ idf.py build
 ### 步骤 3：烧录
 
 1. 杜邦线把 **IO0 接 GND**（进入下载模式），模块**断电再上电**
-2. 执行：
+2. 执行（`COM15` 换成你电脑实际识别的串口号）：
 
 ```powershell
 idf.py -p COM15 flash
@@ -158,3 +156,25 @@ idf.py -p COM15 flash
 ## 一句话总结
 
 **网桥打通 = SHA1 让 WiFi 握手成功 + GPIO16 给 LAN8720 上电 + CLK_INPUT 时钟同源；再加硬编码凭据让开机自动连接。** 源码只改了 sta2eth_main.c 的启动逻辑，其余是 sdkconfig 硬件适配。
+
+
+## 附录：特殊环境配置（工具链装在非默认位置）
+
+本仓库原作者把 ESP-IDF 工具链装在了 E 盘。如果你也遇到工具链不在默认位置的情况，参考以下手动配置（把路径换成你的实际路径）：
+
+```powershell
+cd /d E:\esp-idf\esp-idf-v6.0.2
+set IDF_TOOLS_PATH=E:\.espressif
+set TEMP=E:\esp_temp
+set TMP=E:\esp_temp
+call export.bat
+cd project\wt32-eth01-bridge
+idf.py build
+```
+
+说明：
+
+- `IDF_TOOLS_PATH` 指向工具链目录（默认是 `C:\Users\你的用户名\.espressif`，只有改了位置才需要 set）
+- `TEMP` / `TMP` 指向不含中文的临时目录（避免中文用户名路径导致编译报错）
+- `call export.bat` 加载 ESP-IDF 环境，之后才能用 `idf.py`
+
