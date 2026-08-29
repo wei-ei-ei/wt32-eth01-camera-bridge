@@ -41,8 +41,8 @@ CONFIG_ETHERNET_PHY_INTERFACE_RMII=y
 ### 改动 1：顶部加硬编码 WiFi 凭据
 
 ```c
-#define EXAMPLE_DEFAULT_WIFI_SSID      "name"     //wifi的名字
-#define EXAMPLE_DEFAULT_WIFI_PASS      "passpord" //wifi密码
+#define EXAMPLE_DEFAULT_WIFI_SSID      "wifi名"     
+#define EXAMPLE_DEFAULT_WIFI_PASS      "wifi密码" 
 ```
 
 ### 改动 2：`app_main()` 里，NVS 空或 SSID 不一致时自动写入硬编码凭据
@@ -80,7 +80,7 @@ if (do_provision) {
 **行为**：
 - 开机自动连硬编码 WiFi，无需网页配网
 - 改宏重新烧录 → 自动覆盖旧凭据 → 连新 WiFi
-- WiFi 没开/密码错 → 自动回退网页配网（不会变砖）
+- WiFi 没开/密码错 → 自动回退网页配网
 
 ---
 
@@ -153,6 +153,6 @@ idf.py -p COM15 flash
 
 ---
 
-## 一句话总结
+## 总结
 
 **网桥打通 = SHA1 让 WiFi 握手成功 + GPIO16 给 LAN8720 上电 + CLK_INPUT 时钟同源；再加硬编码凭据让开机自动连接。** 源码只改了 sta2eth_main.c 的启动逻辑，其余是 sdkconfig 硬件适配。
