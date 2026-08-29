@@ -41,8 +41,8 @@ CONFIG_ETHERNET_PHY_INTERFACE_RMII=y
 ### 改动 1：顶部加硬编码 WiFi 凭据
 
 ```c
-#define EXAMPLE_DEFAULT_WIFI_SSID      "HUAWEI"
-#define EXAMPLE_DEFAULT_WIFI_PASS      "rxw12345"
+#define EXAMPLE_DEFAULT_WIFI_SSID      "name"     //wifi的名字
+#define EXAMPLE_DEFAULT_WIFI_PASS      "passpord" //wifi密码
 ```
 
 ### 改动 2：`app_main()` 里，NVS 空或 SSID 不一致时自动写入硬编码凭据
