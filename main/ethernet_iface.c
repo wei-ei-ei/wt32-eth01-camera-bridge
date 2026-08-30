@@ -149,7 +149,12 @@ void mac_spoof(mac_spoof_direction_t direction, uint8_t *buffer, uint16_t len, u
     }
     static uint8_t eth_nic_mac[6] = {};
     static bool eth_nic_mac_found = false;
-#if !ETH_BRIDGE_PROMISCUOUS
+/* 【修复】原官方条件编译有 bug：
+ * ap_mac 的使用处条件为 !ETH_BRIDGE_PROMISCUOUS || MODIFY_DHCP_MSGS，
+ * 但声明处只有 !ETH_BRIDGE_PROMISCUOUS，导致
+ * 混杂模式(y) + DHCP修改(y) 组合时编译报"undeclared"。
+ * 这里把声明条件补齐，与使用处一致。 */
+#if !ETH_BRIDGE_PROMISCUOUS || MODIFY_DHCP_MSGS
     static uint8_t ap_mac[6] = {};
     static bool ap_mac_found = false;
 #endif
