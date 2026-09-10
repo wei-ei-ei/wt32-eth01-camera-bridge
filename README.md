@@ -44,7 +44,10 @@
 
 ### 1. 环境
 
-- ESP-IDF **v6.0.2**（组件随 `main/idf_component.yml` 自动拉取：`espressif/ethernet_init`、`espressif/network_provisioning`）
+- ESP-IDF **v6.0.2**：本工程由官方示例 `examples/network/sta2eth` 改造而来，**v6.0.2 为验证过的编译版本**；
+  其他 IDF 版本的示例目录位置与内部 API 均有差异（如 `esp_wifi_internal_reg_rxcb` 等私有接口），
+  直接换版本编译不保证通过；
+- 依赖组件随 `main/idf_component.yml` 由 Component Manager 自动拉取：`espressif/ethernet_init`、`espressif/network_provisioning`；
 - Windows 下若工具链不在默认位置，需设置环境变量（参考文末附录）
 
 ### 2. 编译烧录
@@ -125,7 +128,7 @@ WT32-ETH01 **没有自动下载电路**，烧录需手动进 bootloader：
 
 ## 九、许可与致谢
 
-- 代码基于 **Espressif 官方示例 `examples/ethernet/sta2eth`** 改造，原文件保留 Espressif 的 SPDX 标识（`Unlicense OR CC0-1.0`）；本仓库的修改同样以该许可发布；
+- 代码基于 **Espressif 官方示例 `examples/network/sta2eth`**（ESP-IDF v6.0.2）改造，原文件保留 Espressif 的 SPDX 标识（`Unlicense OR CC0-1.0`）；本仓库的修改同样以该许可发布；
 - 依赖组件（`espressif/ethernet_init`、`espressif/network_provisioning` 等）许可随 IDF Component Manager 声明；
 - WT32-ETH01 规格资料版权归原厂（Wireless-Tag / 启明云端）所有，本仓库**不转载原厂 PDF**，只提供原创整理笔记与官方链接；
 - 各商标归其所有者所有。
