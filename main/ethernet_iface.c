@@ -237,6 +237,17 @@ void mac_spoof(mac_spoof_direction_t direction, uint8_t *buffer, uint16_t len, u
         // swap addresses in ARP probes
         if (eth_type[1] == 0x06) { // ARP
             uint8_t *arp = eth_type + 2 + 8; // points to sender's HW address
+            /* 【静态IP适配】不发 DHCP 的设备（静态 IP）永远学不到 eth_nic_mac，只能裸 MAC 透传，
+             * 空口上出现"载荷源 MAC ≠ ESP32 STA MAC"的帧——部分路由器会直接丢弃这类帧。
+             * 这里从首个上行 ARP 帧学习有线端 MAC，让静态设备同样进 NAT 路径
+             * （空口只出现 ESP32 的 MAC，与 DHCP 客户端已验证跑通的路径一致）。 */
+            if (!eth_nic_mac_found && direction == FROM_WIRED) {
+                eth_nic_mac_found = true;
+                memcpy(eth_nic_mac, arp, 6);
+                ESP_LOGI(TAG, "Wired client MAC learned from ARP: %02x:%02x:%02x:%02x:%02x:%02x",
+                         eth_nic_mac[0], eth_nic_mac[1], eth_nic_mac[2],
+                         eth_nic_mac[3], eth_nic_mac[4], eth_nic_mac[5]);
+            }
             if (eth_nic_mac_found && direction == FROM_WIRED && memcmp(arp, eth_nic_mac, 6) == 0) {
                 /* updates senders HW address to our wireless */
                 memcpy(arp, own_mac, 6);

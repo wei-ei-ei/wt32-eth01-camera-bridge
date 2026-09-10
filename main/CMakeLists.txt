@@ -1,7 +1,7 @@
 if(CONFIG_EXAMPLE_WIFI_CONFIGURATION_MANUAL)
     set(config_method manual_config.c)
 else()
-    set(config_method provisioning.c scheme_generic_httpd.c)
+    set(config_method provisioning.c)
 endif()
 
 if(CONFIG_EXAMPLE_WIRED_INTERFACE_IS_ETHERNET)

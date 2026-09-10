@@ -1,26 +1,35 @@
-# ==== 配网模式（HTTP 网页配网，作为 fallback）====
-CONFIG_EXAMPLE_WIFI_CONFIGURATION_MANUAL=y
-CONFIG_EXAMPLE_WIFI_CONFIGURATION_PROVISIONING=n
+# ==== 配网模式：统一配网（BLE 蓝牙配网）====
+CONFIG_EXAMPLE_WIFI_CONFIGURATION_PROVISIONING=y
 
-# ==== 以太网接口 ====
-CONFIG_EXAMPLE_WIRED_INTERFACE_IS_ETHERNET=n
-# ==== 以太网混杂模式（关闭 保证更高吞吐量 但电脑无法与 WiFi 侧其他设备通信）====
+# ==== 蓝牙（BLE 配网需要）====
+CONFIG_BT_ENABLED=y
+CONFIG_BT_NIMBLE_ENABLED=y
+CONFIG_BT_NIMBLE_ROLE_PERIPHERAL=y
 
-# ==== PHY 配置（WT32-ETH01 = LAN8720）====
+# ==== 以太网接口（WT32-ETH01 = LAN8720）====
+CONFIG_EXAMPLE_WIRED_INTERFACE_IS_ETHERNET=y
+
+# ==== 以太网混杂模式（必须 y：否则 EMAC 硬件过滤会静默丢弃"目的 MAC 非本机"的单播帧，
+#      有线设备将无法与 WiFi 侧其他设备（手机/电脑）互通）====
+CONFIG_EXAMPLE_ETHERNET_USE_PROMISCUOUS=y
+
+# ==== PHY 配置 ====
 CONFIG_ETHERNET_PHY_LAN87XX=y
 CONFIG_ETHERNET_PHY_ADDR=1
 CONFIG_ETHERNET_PHY_RST_GPIO=16
 
-# ==== RMII 接口与时钟（LAN8720 25MHz 晶振倍频 50MHz 输出给 GPIO0）====
+# ==== RMII 接口与时钟 ====
 CONFIG_ETHERNET_PHY_INTERFACE_RMII=y
 CONFIG_ETHERNET_RMII_CLK_INPUT=y
 CONFIG_ETHERNET_RMII_CLK_GPIO=0
 
-# ==== DHCP 消息修改（必须为 y，否则 ethernet_iface.c 编译报"未声明"）====
+# ==== DHCP 消息修改（必须 y，否则编译报"未声明"）====
 CONFIG_EXAMPLE_MODIFY_DHCP_MESSAGES=y
 
-# ==== 分区表：单 app 大分区（app 1.5MB）====
+# ==== 分区表：单 app 大分区 ====
 CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
 
 # ==== SHA1（WPA2 握手必需）====
 CONFIG_MBEDTLS_SHA1_C=y
+
+# ==== 以太网混杂模式（必须 y：否则 EMAC 硬件过滤会静默丢弃"目的 MAC 非本机"的单播帧，

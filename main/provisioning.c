@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  */
 #include <network_provisioning/manager.h>
+#include <network_provisioning/scheme_ble.h>
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_event.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
-#include "dns_server.h"
 
 static const char *TAG = "NCM_provisioning";
 
@@ -129,13 +129,10 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
-extern const network_prov_scheme_t network_prov_scheme_httpd;
+extern const network_prov_scheme_t network_prov_scheme_ble;
 
 esp_err_t start_provisioning(EventGroupHandle_t *flags, int success_bit, int fail_bit)
 {
-    // Start the DNS server that will reply to "wifi.settings" with "usb" network interface address
-    dns_server_config_t dns_config = DNS_SERVER_CONFIG_SINGLE("wifi.settings" /* name */, "wired" /* wired netif ID */);
-    start_dns_server(&dns_config);
     struct events *handler_args = malloc(sizeof(struct events));
     handler_args->flags = flags;
     handler_args->success_bit = success_bit;
@@ -143,7 +140,7 @@ esp_err_t start_provisioning(EventGroupHandle_t *flags, int success_bit, int fai
     ESP_ERROR_CHECK(esp_event_handler_register(NETWORK_PROV_EVENT, ESP_EVENT_ANY_ID, event_handler, handler_args));
     /* Configuration for the provisioning manager */
     network_prov_mgr_config_t config = {
-        .scheme = network_prov_scheme_httpd,
+        .scheme = network_prov_scheme_ble,
     };
 
     /* Initialize provisioning manager with the
@@ -192,7 +189,7 @@ esp_err_t start_provisioning(EventGroupHandle_t *flags, int success_bit, int fai
     network_prov_security2_params_t *sec_params = &sec2_params;
 #endif // CONFIG_EXAMPLE_PROV_SECURITY_VERSION_0 (VERSION_1, VERSION_2)
 
-    ESP_ERROR_CHECK(network_prov_mgr_start_provisioning(security, (const void *) sec_params, NULL, NULL)); // service name and key could be NULL
+    ESP_ERROR_CHECK(network_prov_mgr_start_provisioning(security, (const void *) sec_params, "PROV_", NULL));
     return ESP_OK;
 }
 

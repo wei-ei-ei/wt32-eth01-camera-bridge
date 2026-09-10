@@ -23,12 +23,6 @@
 
 static const char *TAG = "example_sta2wired";
 
-/* 【修改】硬编码 WiFi 凭据：
- * NVS 中无已保存凭据时，自动使用下面的 SSID/密码连接，
- * 跳过网页配网。若连接失败仍会回退到网页配网模式。 */
-#define EXAMPLE_DEFAULT_WIFI_SSID      "HUAWEI-逐梦"
-#define EXAMPLE_DEFAULT_WIFI_PASS      "zjzm260507"
-
 
 static EventGroupHandle_t s_event_flags;
 static bool s_wifi_is_connected = false;
@@ -48,7 +42,13 @@ static esp_err_t wired_recv_callback(void *buffer, uint16_t len, void *ctx)
     if (s_wifi_is_connected) {
         mac_spoof(FROM_WIRED, buffer, len, s_sta_mac);
         if (esp_wifi_internal_tx(WIFI_IF_STA, buffer, len) != ESP_OK) {
-            ESP_LOGD(TAG, "Failed to send packet to WiFi!");
+            /* 上行拥塞时 WiFi 发送队列丢帧是静默的：TCP 只能靠 RTO 重传恢复，
+             * RTMP 延迟会持续抬高。计数并周期性告警，用于量化推流期丢包率。 */
+            static uint32_t s_wifi_tx_drop_cnt;
+            s_wifi_tx_drop_cnt++;
+            if (s_wifi_tx_drop_cnt == 1 || (s_wifi_tx_drop_cnt % 100) == 0) {
+                ESP_LOGW(TAG, "WiFi TX drop #%lu (len=%u)", (unsigned long)s_wifi_tx_drop_cnt, len);
+            }
         }
     }
     return ESP_OK;
@@ -94,6 +94,12 @@ static esp_err_t connect_wifi(void)
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, event_handler, NULL));
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA) );
     ESP_ERROR_CHECK(esp_wifi_start() );
+
+    /* 关闭 WiFi 省电模式（MODEM sleep）：
+     * 默认省电模式下 WiFi 周期性休眠（约 102ms），下行大流量（iperf3/SSH 的
+     * TCP 数据+ACK）在休眠窗口被丢包，TCP 重传崩溃、表现"不通"。
+     * 关掉后 WiFi 始终接收，两跳 WiFi 场景下 TCP 才能维持。 */
+    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
 
     wifi_config_t wifi_cfg;
     if (esp_wifi_get_config(WIFI_IF_STA, &wifi_cfg) != ESP_OK) {
@@ -185,7 +191,7 @@ void app_main(void)
 
     /* Start the application in configuration mode (to perform provisioning)
      * or in a bridge mode (already provisioned) */
-    if (do_provision) {
+    if (do_provision || !is_provisioned()) {
         ESP_LOGI(TAG, "Starting provisioning");
         ESP_ERROR_CHECK(esp_netif_init());
         // needed to complete provisioning with getting a valid IP event
@@ -195,24 +201,6 @@ void app_main(void)
         wired_netif_init();
         start_provisioning(&s_event_flags, PROV_SUCCESS_BIT, PROV_FAIL_BIT);
     } else {
-        /* 【修改】硬编码凭据优先：
-         * NVS 为空，或 NVS 中保存的 SSID 与硬编码宏不一致（用户改了宏），
-         * 则用硬编码凭据覆盖 NVS，保证修改宏后自动生效。 */
-        wifi_config_t wifi_cfg;
-        bool update_config = false;
-        if (esp_wifi_get_config(WIFI_IF_STA, &wifi_cfg) != ESP_OK) {
-            update_config = true;
-        } else if (strcmp((const char *)wifi_cfg.sta.ssid, EXAMPLE_DEFAULT_WIFI_SSID) != 0) {
-            update_config = true;
-        }
-        if (update_config) {
-            ESP_LOGI(TAG, "Applying hardcoded WiFi config (SSID=%s)", EXAMPLE_DEFAULT_WIFI_SSID);
-            ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-            memset(&wifi_cfg, 0, sizeof(wifi_cfg));
-            strlcpy((char *)wifi_cfg.sta.ssid, EXAMPLE_DEFAULT_WIFI_SSID, sizeof(wifi_cfg.sta.ssid));
-            strlcpy((char *)wifi_cfg.sta.password, EXAMPLE_DEFAULT_WIFI_PASS, sizeof(wifi_cfg.sta.password));
-            ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_cfg));
-        }
         ESP_LOGI(TAG, "Starting USB-WiFi bridge");
         if (connect_wifi() != ESP_OK) {
             // if we cannot connect to WiFi we just try to re-provision
